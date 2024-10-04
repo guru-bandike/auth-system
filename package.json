@@ -1,0 +1,19 @@
+{
+  "name": "auth-system",
+  "version": "1.0.0",
+  "description": "A complete Node.js authentication starter kit featuring email and Google sign-in/signup, encrypted passwords, and session management. Includes parallel job handling for sending emails (e.g., confirmation, password reset) using asynchronous job queues, ensuring faster and more efficient workflows. The package is designed with a scalable folder structure, well-commented code, and user-friendly interfaces. Bonus features include reCAPTCHA support, reset password links, and forgotten password recovery.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guru-bandike/auth-system.git"
+  },
+  "author": "Guru Bandike",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guru-bandike/auth-system/issues"
+  },
+  "homepage": "https://github.com/guru-bandike/auth-system#readme"
+}
