@@ -1,8 +1,9 @@
 {
   "name": "auth-system",
   "version": "1.0.0",
-  "description": "A complete Node.js authentication starter kit featuring email and Google sign-in/signup, encrypted passwords, and session management. Includes parallel job handling for sending emails (e.g., confirmation, password reset) using asynchronous job queues, ensuring faster and more efficient workflows. The package is designed with a scalable folder structure, well-commented code, and user-friendly interfaces. Bonus features include reCAPTCHA support, reset password links, and forgotten password recovery.",
+  "description": "A complete Node.js authentication starter kit featuring email and Google sign-in/signup, encrypted passwords, session management, parallel job handling for sending emails (e.g., confirmation, password reset) using asynchronous job queues, scalable folder structure, reCAPTCHA support, reset password links, and forgotten password recovery.",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +16,22 @@
   "bugs": {
     "url": "https://github.com/guru-bandike/auth-system/issues"
   },
-  "homepage": "https://github.com/guru-bandike/auth-system#readme"
+  "homepage": "https://github.com/guru-bandike/auth-system#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-useragent": "^1.0.15",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.7.0",
+    "mongoose": "^8.4.3",
+    "nodemailer": "^6.9.15",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
 }
