@@ -2,16 +2,6 @@ import mongoose from 'mongoose';
 import bcryptHasher from 'bcrypt';
 import RequestError from '../errors/RequestError.js';
 
-const tokenSchema = new mongoose.Schema({
-  token: { type: String, required: [true, 'Token is required!'] },
-  createdAt: { type: Date, required: [true, 'Token creation date is required!'] },
-  expiresAt: Date,
-  browser: String,
-  os: String,
-  isExpired: Boolean,
-  expiredAt: Date,
-});
-
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -30,13 +20,8 @@ const userSchema = new mongoose.Schema(
         message: 'Invalid email address!',
       },
     },
-    password: { type: String, required: [true, 'User password is required!'] },
-    gender: {
-      type: String,
-      enum: { values: ['male', 'female', 'others'], message: 'Invalid Gender!' },
-      set: (v) => v.toString().toLowerCase(), // Normalize to lowercase before checking
-    },
-    tokens: [tokenSchema],
+    password: { type: String },
+    googleId: { type: String },
     resetPassToken: String,
     resetPassTokenExpiry: Date,
   },
@@ -78,8 +63,8 @@ userSchema.pre('save', async function (next) {
 
 // -------------------------------- User Document Methods section: Start -------------------------------- //
 
-// Define an instance method to compare passwords in the User schema
-userSchema.methods.comparePassword = async function (requestPassword) {
+// Define an instance method to verify input passowrd
+userSchema.methods.isValidPassword = async function (requestPassword) {
   // 'this' refers to the user document on which the method is called
   const userDoc = this;
   const hashedPassword = userDoc.password;
@@ -114,4 +99,5 @@ userSchema.statics.isEmailInUse = async function (email) {
 
 // -------------------------------- User Model Methods section: End -------------------------------- //
 
-export const UserModel = mongoose.model('user', userSchema);
+const UserModel = mongoose.model('user', userSchema);
+export default UserModel;

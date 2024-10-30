@@ -1,6 +1,6 @@
 import { body, validationResult } from 'express-validator';
 import RequestError from '../errors/RequestError.js';
-import { UserModel } from '../Models/user.model.js';
+import UserModel from '../Models/user.model.js';
 
 const validateUserDetails = async (req, res, next) => {
   // Define validation rules
@@ -29,7 +29,6 @@ const validateUserDetails = async (req, res, next) => {
       .withMessage(
         'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character!'
       ),
-    body('gender').toLowerCase().isIn(['male', 'female', 'others']).withMessage('Invalid gender!'),
   ];
 
   try {

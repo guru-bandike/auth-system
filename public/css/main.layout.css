@@ -1,0 +1,44 @@
+/* Google Fonts Link */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* Resetting default styling and setting font-family */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
+}
+
+body {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0 10px;
+  display: flex;
+  background: #626cd6;
+  justify-content: center;
+  align-items: center;
+}
+
+#alertContainer {
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
+}
+
+.toast {
+  margin-bottom: 0.5rem;
+}
+
+/* Adjusting font size for smaller screens */
+@media (max-width: 576px) {
+  html {
+    font-size: 14px; /* 1rem = 14px */
+  }
+}
+
+/* Adjusting font size for larger screens */
+@media (min-width: 769px) {
+  html {
+    font-size: 18px; /* 1rem = 18px */
+  }
+}

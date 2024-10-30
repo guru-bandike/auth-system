@@ -1,0 +1,16 @@
+table {
+  width: 100%;
+  border-collapse: collapse; /* Ensure borders don't have gaps */
+}
+
+table,
+th,
+td {
+  border: 1px solid black; /* Apply borders */
+}
+
+th,
+td {
+  padding: 8px; /* Optional padding for cells */
+  text-align: left; /* Align text in cells */
+}

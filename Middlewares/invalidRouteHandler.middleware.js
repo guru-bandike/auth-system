@@ -1,7 +1,9 @@
 const handleInvalidRoute = (req, res) => {
-  res.status(404).json({
-    status: false,
-    message: 'Route not found!, Please check out our documentaion for more information!',
+  res.render('404', {
+    title: 'Not Found',
+    cssFilePath: '/css/form.common.css',
+    errorMessages: req.flash('errorMessages'),
+    successMessages: req.flash('successMessages'),
   });
 };
 

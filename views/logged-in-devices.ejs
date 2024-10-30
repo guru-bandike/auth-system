@@ -1,0 +1,31 @@
+<main>
+    <a class="btn btn-warning mb-2" href="/" role="button">Home</a>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Device
+                </th>
+                <th>
+                    Browser
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <% if (locals.loggedInDevices) { %>
+                <% loggedInDevices.forEach(d => { %>
+                    <tr>
+                        <td><%= d.device %></td>
+                        <td><%= d.browser %></td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="2">No active devices</td>
+                </tr>
+            <% } %>
+
+        </tbody>
+    </table>
+</main>

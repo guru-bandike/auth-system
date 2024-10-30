@@ -1,11 +1,25 @@
-import jwt from 'jsonwebtoken';
-import RequestError from '../errors/RequestError.js';
+import { loginFailureReasons } from '../config/passport.config.js';
 import UserRepository from '../Repositories/user.repository.js';
-import EmailManager from '../Utils/emailManager.js';
+import EmailService from '../Utils/EmailService.js';
+import passport from 'passport';
 
 export default class UserController {
   constructor() {
     this.userRepo = new UserRepository();
+  }
+
+  // Method to Get SignUp view
+  async getSignup(req, res, next) {
+    try {
+      res.render('signup', {
+        title: 'Sign Up',
+        cssFilePath: '/css/form.common.css',
+        errorMessages: req.flash('errorMessages'),
+        successMessages: req.flash('successMessages'),
+      });
+    } catch (err) {
+      next(err);
+    }
   }
 
   // Method to Register new
@@ -14,100 +28,115 @@ export default class UserController {
     try {
       await this.userRepo.signup(details);
 
-      // Send success response to the user
-      res.status(201).json({ success: true, message: 'User has been successfully Signed Up!' });
+      req.flash('successMessages', ['Sing Up Successful!']);
+      res.redirect('/user/login');
     } catch (err) {
       next(err);
     }
   }
 
-  // Method to login user and send a JWT token
-  async signin(req, res, next) {
-    const { email, password } = req.body;
-
-    // If the email or password are not provided , throw custom error to send failure response
-    if (!email || email.trim().length == 0 || !password || password.trim().length == 0) {
-      return next(
-        new RequestError('Email address and password must be provided!', 400, {
-          requestData: { email, password },
-        })
-      );
-    }
-
+  // Method to Login view
+  async getLogin(req, res, next) {
     try {
-      // Login user and get user details
-      const user = await this.userRepo.signin(email, password);
-
-      // Delete tokens that have expired by default (Not by the server)
-      await this.userRepo.deleteExpiredTokens(user);
-
-      const JWT_SECRET = process.env.JWT_SECRET;
-      const payload = { userId: user._id };
-
-      // Generate JWT token
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-
-      // Extract device info
-      const deviceInfo = req.useragent;
-
-      // Add token and device info to user's tokens array
-      // This helps while logging out user from all devices
-      await this.userRepo.addToken(user, token, deviceInfo);
-
-      res.status(200).json({ success: true, message: 'User logged in successfully!', token });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  // Method to signout user
-  async signout(req, res, next) {
-    const userId = req.userId;
-    const token = req.headers['authorization'];
-
-    try {
-      // Mark the specified token as expired and update the user document
-      const expiredToken = await this.userRepo.expireToken(userId, token);
-
-      // Send success response to the user
-      res
-        .status(201)
-        .json({ success: true, message: 'User has been successfully Logged out!', expiredToken });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  // Method to signout on All devices
-  async signoutAll(req, res, next) {
-    const userId = req.userId;
-    try {
-      // Mark the all user tokens as expired and update the user document
-      const expiredTokens = await this.userRepo.expireAllUserTokens(userId);
-
-      // Send success response to the user
-      res.status(201).json({
-        success: true,
-        message: 'User has been successfully Logged out from all devices!',
-        expiredTokens,
+      res.render('login', {
+        title: 'Log In',
+        cssFilePath: '/css/form.common.css',
+        errorMessages: req.flash('errorMessages'),
+        successMessages: req.flash('successMessages'),
       });
     } catch (err) {
       next(err);
     }
   }
 
-  // Method get all user active sessions
-  async getActiveSessions(req, res, next) {
-    const userId = req.userId;
+  // Method to login user
+  async login(req, res, next) {
     try {
-      // Get all user active sessions
-      const activeSessions = await this.userRepo.getActiveSessions(userId);
+      passport.authenticate('local', (err, user, info, status) => {
+        // Ensure there is no error with passport authenticate
+        if (err) return next(err);
 
-      // Send success response to the user
-      res.status(201).json({
-        success: true,
-        message: 'All user active sessions found!',
-        activeSessions,
+        if (!user) {
+          const { INVALID_EMAIL, SIGNED_UP_WITH_GOOGLE } = loginFailureReasons;
+
+          // Ensure provided email is valid
+          if (info.failureReason === INVALID_EMAIL) {
+            req.flash('errorMessages', [
+              'We dont have any account associated with this email, Please SignUp to continue!',
+            ]);
+            return res.redirect('/user/signup');
+
+            // Ensure user already Have password
+          } else if (info.failureReason === SIGNED_UP_WITH_GOOGLE) {
+            req.flash('errorMessages', [
+              'User Signed Up with Google, So either login with Google or Request for forgot password to add password!',
+            ]);
+            return res.redirect('/user/forgot-password');
+
+            // Ensure provided passowrd is valid
+          } else {
+            req.flash('errorMessages', ['Invalid Password!']);
+            return res.redirect(req.originalUrl);
+          }
+        }
+
+        // Login user
+        req.login(user, (err) => {
+          // Ensure there is not error while login
+          if (err) return next(err);
+
+          // Redirect user to home
+          res.redirect('/');
+        });
+      })(req, res, next);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Method to Logout user
+  async logout(req, res, next) {
+    req.logout((err) => {
+      if (err) return next(err);
+
+      req.flash('successMessages', ['Log Out Successful!']);
+      res.redirect('/user/login');
+    });
+  }
+
+  // Method get all user logged in devices
+  async getLoggedInDevices(req, res, next) {
+    const userId = req.user._id.toString();
+
+    try {
+      req.sessionStore.all((err, sessions) => {
+        if (err) return next(err);
+
+        const loggedInDevices = sessions
+          .filter((s) => s.deviceDetails?.userId === userId)
+          .map((s) => s.deviceDetails);
+
+        res.render('logged-in-devices', {
+          title: 'Logged In Devices',
+          loggedInDevices,
+          cssFilePath: '/css/loggedInDevices.css',
+          errorMessages: req.flash('errorMessages'),
+          successMessages: req.flash('successMessages'),
+        });
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Method to Get Reset password after logIn view
+  async getResetPassAfterLogin(req, res, next) {
+    try {
+      res.render('reset-password-after-login', {
+        title: 'Reset Password',
+        cssFilePath: '/css/form.common.css',
+        errorMessages: req.flash('errorMessages'),
+        successMessages: req.flash('successMessages'),
       });
     } catch (err) {
       next(err);
@@ -115,97 +144,144 @@ export default class UserController {
   }
 
   // Method to reset user password
-  async resetPassword(req, res, next) {
+  async resetPassAfterLogin(req, res, next) {
     try {
-      const { userId } = req;
+      const userId = req.user._id.toString();
       const { oldPassword, newPassword } = req.body;
 
-      // Ensure password is strong
-      this.#ensurePasswordIsStrong(newPassword);
+      // Ensure password are provided
+      if (!oldPassword || !newPassword) {
+        req.flash('errorMessages', ['Old and New passowrds must be Prodived!']);
+        return res.redirect(req.originalUrl);
+      }
+
+      // Ensure new password is strong
+      if (!this.#isPasswordStrong(newPassword)) {
+        req.flash('errorMessages', [
+          'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character!',
+        ]);
+        return res.redirect(req.originalUrl);
+      }
 
       // Reset password
       await this.userRepo.resetPassword(userId, oldPassword, newPassword);
 
-      // Send success response
-      res
-        .status(200)
-        .json({ success: true, message: `Password reset has been successfully completed!` });
+      req.flash('successMessages', ['Password Reset Successful!']);
+      res.redirect(req.originalUrl);
     } catch (err) {
       next(err);
     }
   }
 
-  // Method to reset user password
+  // Method to Get Forgot password request view
+  async getForgotPass(req, res, next) {
+    try {
+      res.render('forgot-password-req', {
+        title: 'Forgot Password',
+        cssFilePath: '/css/form.common.css',
+        errorMessages: req.flash('errorMessages'),
+        successMessages: req.flash('successMessages'),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Method to send reset password link to user email
   async sendResetPassLink(req, res, next) {
     try {
       const { email } = req.body;
 
-      // If the email not provided , throw Request error to send failure response
-      if (!email || email.trim().length == 0)
-        return next(new RequestError('Email must be provided!', 400));
+      if (!email || email.trim().length === 0) {
+        req.flash('errorMessages', ['Email must be provided!']);
+        return res.redirect(req.originalUrl);
+      }
 
-      // Get User
       const user = await this.userRepo.getByEmail(email);
+      if (!user) {
+        req.flash('errorMessages', ['User Not Found!']);
+        return res.redirect(req.originalUrl);
+      }
 
-      // If user not found, throw Request error to send failure response
-      if (!user) return next(new RequestError('User not found!', 400));
+      const resetToken = await EmailService.sendResetPassLink(req, email);
 
-      // Send Reset link to user
-      const addResetPassToken = await EmailManager.sendResetPassLink(req, email);
+      user.resetPassToken = resetToken;
+      user.resetPassTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      await user.save();
 
-      // Add reset token to user doc
-      await this.userRepo.addResetPassToken(email, addResetPassToken);
+      req.flash('successMessages', ['Password Reset Link will be sent to your email shortly!']);
+      return res.redirect(req.originalUrl);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-      // Send success response
-      res.status(200).json({
-        success: true,
-        message: `Password reset link has been successfully sent to email!`,
+  // Method to Get reset password after forgot request view
+  async getResetPassAfterForgotReq(req, res, next) {
+    const { token } = req.params;
+    // Ensure req is valid
+    if (!(await this.userRepo.isResetLinkValid(token))) {
+      req.flash('errorMessages', ['Invalid Reset Password Link!']);
+      return res.redirect('/user/login');
+    }
+
+    try {
+      res.render('reset-password-after-forgot-req', {
+        title: 'Reset Password',
+        cssFilePath: '/css/form.common.css',
+        errorMessages: req.flash('errorMessages'),
+        successMessages: req.flash('successMessages'),
+        token,
       });
     } catch (err) {
       next(err);
     }
   }
 
-  // Method to reset user password with reset password token
-  async resetPasswordWithToken(req, res, next) {
+  // Method to reset user password after forgot request
+  async resetPasswordAfterForgotReq(req, res, next) {
     try {
       const { token } = req.params;
       const { password } = req.body;
 
-      // Ensure password is strong
-      this.#ensurePasswordIsStrong(password);
+      // Ensure password are provided
+      if (!password) {
+        req.flash('errorMessages', ['Passowrd must be Prodived!']);
+        return res.redirect(req.originalUrl);
+      }
+
+      // Ensure new password is strong
+      if (!this.#isPasswordStrong(password)) {
+        req.flash('errorMessages', [
+          'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character!',
+        ]);
+        return res.redirect(req.originalUrl);
+      }
 
       // Reset password
       await this.userRepo.resetPasswordWithToken(token, password);
 
-      // Send success response
-      res.status(200).json({
-        success: true,
-        message: `Password reset successful!`,
-      });
+      // Attach error to the request to access in further process
+      req.flash('successMessages', ['Password Reset Successful!']);
+      res.redirect('/user/login');
     } catch (err) {
       next(err);
     }
+  }
+
+  googleAuth(req, res, next) {
+    passport.authenticate('google', { failureRedirect: '/user/login' })(req, res, () => {
+      res.redirect('/'); // Redirect to home on successful login
+    });
   }
 
   // -------------------------------- Private Method Section: Start -------------------------------- //
 
   // Helper method to ensure password is strong
-  #ensurePasswordIsStrong(password) {
+  #isPasswordStrong(password) {
     const strongPasswordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*]).{8,}$/;
 
-    // If the password not provided , throw Request error to send failure response
-    if (!password || password.trim().length == 0)
-      throw new RequestError('Password must be provided!', 400);
-
-    // If password is not strong, throw Request error to send failure response
-    if (!strongPasswordRules.test(password))
-      throw new RequestError(
-        'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character!',
-        400,
-        { password }
-      );
+    return strongPasswordRules.test(password);
   }
-
   // -------------------------------- Private Method Section: End -------------------------------- //
 }
