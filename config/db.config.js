@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import logError from '../utils/errorLogger.js';
+import logError from '../Utils/errorLogger.js';
 
 const connectToDB = async () => {
   try {
