@@ -11,7 +11,6 @@ const sessionMiddleware = session({
   cookie: {
     maxAge: 1000 * 60 * 60, // 1 hour
     sameSite: 'lax', // cross-site request forgery (CSRF) protection
-    secure: process.env.NODE_ENV === 'production', // Secure only on productoin
     httpOnly: true, // Prevents client-side JavaScript from accessing cookies, reducing the risk of cross-site scripting (XSS) attacks.
   },
   saveUninitialized: false, // Don't create session until something stored
