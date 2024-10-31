@@ -1,60 +1,78 @@
+import { Queue, Worker } from 'bullmq';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-import { emailQueue, connection } from '../config/queue.config.js';
-import { Worker } from 'bullmq';
 import logError from './errorLogger.js';
 
-class EmailService {
-  constructor() {
-    // Configure transporter
-    this.transporter = nodemailer.createTransport({
+const redisConnection = {
+  url: process.env.REDIS_URL, // Use cloud Redis URL
+  maxRetriesPerRequest: null, // Required by BullMQ for Redis Cloud
+};
+
+// Initialize the queue
+const emailQueue = new Queue('emailQueue', { connection: redisConnection });
+
+// Worker to process jobs
+const worker = new Worker(
+  'emailQueue',
+  async (job) => {
+    // Destructure email data from job
+    const { mailOptions } = job.data;
+
+    // Set up Nodemailer transport
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_ADDRESS,
-        pass: process.env.GMAIL_PAAKEY,
-      },
+      auth: { user: process.env.GMAIL_ADDRESS, pass: process.env.GMAIL_PAAKEY },
     });
 
-    // Initialize email worker
-    this.emailWorker = new Worker(
-      'emailQueue',
-      async (job) => {
-        try {
-          const { mailOptions } = job.data;
-          await this.transporter.sendMail(mailOptions);
-        } catch (error) {
-          throw error; // Ensures job is marked as failed
-        }
-      },
-      { connection }
-    );
+    // Send email
+    await transporter.sendMail(mailOptions);
+  },
+  { connection: redisConnection }
+);
 
-    // Add event listeners for logging
-    this.emailWorker.on('failed', (job, err) => {
-      logError(err); // log error in separate file
-      console.error(`Failed to send Reset password email, checkout error.log for more info!`);
-    });
-  }
+worker.on('failed', (job, err) => {
+  logError(err);
+  console.error(`Failed to send Reset password email, Checkout error.log for more info!`);
+});
 
-  // Method to create and queue the reset password email
-  async sendResetPassLink(req, toEmail) {
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    const resetLink = `${req.protocol}://${req.get('host')}/user/reset-password/${resetToken}`;
+// Function to add email jobs to the queue
+const sendResetPasswordMail = async (req, toEmail) => {
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  const resetLink = `${req.protocol}://${req.get('host')}/user/reset-password/${resetToken}`;
 
-    // Define email options
-    const mailOptions = {
-      from: process.env.GMAIL_ADDRESS,
-      to: toEmail,
-      subject: 'Password Reset',
-      text: `You requested a password reset.Click the link to reset your password: ${resetLink}\nThis link is only valid for the next 10 minutes!`,
-    };
+  // Define email options
+  const mailOptions = {
+    from: process.env.GMAIL_ADDRESS,
+    to: toEmail,
+    subject: 'Password Reset Request',
+    html: `
+    <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+        <h2 style="text-align: center; color: #333;">Password Reset Request</h2>
+        <p style="color: #666; font-size: 16px;">
+          Hello,
+        </p>
+        <p style="color: #666; font-size: 16px;">
+          You requested a password reset for your account. Please click the button below to reset your password.
+        </p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetLink}" style="background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 16px;">Reset Password</a>
+        </div>
+        <p style="color: #666; font-size: 16px;">
+          Note: This link is only valid for the next 10 minutes.
+        </p>
+      </div>
+    </div>
+  `,
+  };
 
-    // Queue the email job
-    await emailQueue.add('sendEmail', { mailOptions });
+  await emailQueue.add(
+    'sendEmail',
+    { mailOptions },
+    { attempts: 3 } // Retry up to 3 times if sending fails
+  );
 
-    return resetToken;
-  }
-}
+  return resetToken;
+};
 
-// Export an instance of EmailService
-export default new EmailService();
+export { sendResetPasswordMail };

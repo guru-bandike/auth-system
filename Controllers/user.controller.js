@@ -1,6 +1,6 @@
 import { loginFailureReasons } from '../config/passport.config.js';
 import UserRepository from '../Repositories/user.repository.js';
-import EmailService from '../Utils/EmailService.js';
+import { sendResetPasswordMail } from '../Utils/EmailService.js';
 import passport from 'passport';
 
 export default class UserController {
@@ -14,6 +14,7 @@ export default class UserController {
       res.render('signup', {
         title: 'Sign Up',
         cssFilePath: '/css/form.common.css',
+        jsFilePath: '/js/form.common.js',
         errorMessages: req.flash('errorMessages'),
         successMessages: req.flash('successMessages'),
       });
@@ -41,6 +42,7 @@ export default class UserController {
       res.render('login', {
         title: 'Log In',
         cssFilePath: '/css/form.common.css',
+        jsFilePath: '/js/form.common.js',
         errorMessages: req.flash('errorMessages'),
         successMessages: req.flash('successMessages'),
       });
@@ -135,6 +137,7 @@ export default class UserController {
       res.render('reset-password-after-login', {
         title: 'Reset Password',
         cssFilePath: '/css/form.common.css',
+        jsFilePath: '/js/form.common.js',
         errorMessages: req.flash('errorMessages'),
         successMessages: req.flash('successMessages'),
       });
@@ -179,6 +182,7 @@ export default class UserController {
       res.render('forgot-password-req', {
         title: 'Forgot Password',
         cssFilePath: '/css/form.common.css',
+        jsFilePath: '/js/form.common.js',
         errorMessages: req.flash('errorMessages'),
         successMessages: req.flash('successMessages'),
       });
@@ -203,7 +207,7 @@ export default class UserController {
         return res.redirect(req.originalUrl);
       }
 
-      const resetToken = await EmailService.sendResetPassLink(req, email);
+      const resetToken = await sendResetPasswordMail(req, email);
 
       user.resetPassToken = resetToken;
       user.resetPassTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -229,6 +233,7 @@ export default class UserController {
       res.render('reset-password-after-forgot-req', {
         title: 'Reset Password',
         cssFilePath: '/css/form.common.css',
+        jsFilePath: '/js/form.common.js',
         errorMessages: req.flash('errorMessages'),
         successMessages: req.flash('successMessages'),
         token,
