@@ -31,9 +31,15 @@
           <label for="password">Password</label>   
         <input type="password" id="password" name="password" placeholder="Enter your password" required value="<%= locals.password %>"/>
       </div>
+      <!-- reCAPTCHA -->
+      <div class="g-recaptcha" data-sitekey="6Lfx0HEqAAAAANCz0xFb3ewEGWWyJ6QCmvSTPCjU"></div>
+      <br/>
        <!-- SignUp button -->
       <button type="submit" id="submit_button">Sign Up</button>
       <p >Have an account? <a href="/user/login">Login</a></p>
     </form>
   </div>
 </main>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+

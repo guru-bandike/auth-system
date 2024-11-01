@@ -7,6 +7,7 @@ import {
   initiateGoogleLogin,
 } from '../Middlewares/googleAuth.middleware.js';
 import ensureUserNotLoggedIn from '../Middlewares/ensureUserNotLoggedIn.middleware.js';
+import validateRecaptcha from '../Middlewares/recaptchaValidator.middleware.js';
 
 // Initialize User Router
 const userRouter = express.Router();
@@ -20,9 +21,15 @@ userRouter.get('/signup', ensureUserNotLoggedIn, (req, res, next) => {
 });
 
 // Route to register a new user.
-userRouter.post('/signup', ensureUserNotLoggedIn, validateUserDetails, (req, res, next) => {
-  userController.signup(req, res, next);
-});
+userRouter.post(
+  '/signup',
+  ensureUserNotLoggedIn,
+  validateRecaptcha,
+  validateUserDetails,
+  (req, res, next) => {
+    userController.signup(req, res, next);
+  }
+);
 
 // Route to Get Login view
 userRouter.get('/login', ensureUserNotLoggedIn, (req, res, next) => {
@@ -30,7 +37,7 @@ userRouter.get('/login', ensureUserNotLoggedIn, (req, res, next) => {
 });
 
 // Route to Login user
-userRouter.post('/login', ensureUserNotLoggedIn, (req, res, next) => {
+userRouter.post('/login', ensureUserNotLoggedIn, validateRecaptcha, (req, res, next) => {
   userController.login(req, res, next);
 });
 

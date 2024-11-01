@@ -1,7 +1,7 @@
 <main>
-  <div class="form" >
+  <div class="form">
     <!-- Login form container -->
-    <form action="/user/login" method="post" enctype="application/x-www-form-urlencoded">
+    <form id="loginForm" action="/user/login" method="post" enctype="application/x-www-form-urlencoded">
       <h3>Log in with</h3>
       <div class="options">
         <!-- Google button -->
@@ -19,19 +19,23 @@
       <!-- Email input box -->
       <div class="input_box">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="Enter email address" required value="<%= locals.email %>"/>
+        <input type="email" id="email" name="email" placeholder="Enter email address" required value="<%= locals.email %>" />
       </div>
-      <!-- Paswwrod input box -->
+      <!-- Password input box -->
       <div class="input_box">
         <div class="input_title_container">
           <label for="password">Password</label>
           <a href="/user/forgot-password">Forgot Password?</a>
         </div>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required  value="<%= locals.password %>"/>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required value="<%= locals.password %>" />
       </div>
-       <!-- Login button -->
+      <!-- reCAPTCHA -->
+      <div class="g-recaptcha" data-sitekey="6Lfx0HEqAAAAANCz0xFb3ewEGWWyJ6QCmvSTPCjU"></div>
+      <br/>
       <button type="submit" id="submit_button">Log In</button>
       <p class="sign_up">Don't have an account? <a href="/user/signup">Sign up</a></p>
     </form>
   </div>
 </main>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>

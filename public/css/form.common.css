@@ -1,6 +1,5 @@
 /* Form styling */
 .form {
-  /* width: 435px; */
   background: #fff;
   border-radius: 6px;
   padding: 2rem 3rem;
@@ -35,7 +34,6 @@
   background: #f8f8fb;
   border: 1px solid #dadaf2;
   border-radius: 5px;
-  margin: 1rem 0 1rem 0;
   text-decoration: none;
   color: #171645;
   font-weight: 500;
@@ -54,11 +52,11 @@
 .form p {
   text-align: center;
   font-weight: 500;
+  margin-bottom: 0;
 }
 
 .form .separator {
   position: relative;
-  margin-bottom: 24px;
 }
 
 /* Form option separator styling */
@@ -96,7 +94,7 @@ form .input_box input {
   background: #f8f8fb;
   font-size: 17px;
   padding: 0px 20px;
-  margin-bottom: 25px;
+  margin-bottom: 5px;
   transition: 0.2s ease;
 }
 
@@ -138,7 +136,7 @@ form button {
   font-weight: 500;
   text-transform: uppercase;
   cursor: pointer;
-  margin-bottom: 28px;
+  margin-bottom: 5px;
   transition: 0.3s ease;
 }
 

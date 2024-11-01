@@ -7,9 +7,7 @@ const handleGlobalErrors = (err, req, res, next) => {
   if (err instanceof RequestError) {
     // Attach error to the request to access in further process
     if (err.dataObj?.validationErrors) {
-      const { validationErrors } = err.dataObj;
-      validationErrors.unshift(err.message);
-      req.flash('errorMessages', validationErrors);
+      req.flash('errorMessages', err.dataObj.validationErrors);
     } else {
       req.flash('errorMessages', [err.message]);
     }
