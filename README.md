@@ -1,7 +1,7 @@
 <h1 align="center" style="font-weight: bolder; color: #059d06">Auth System</h1>
 
 <p align="center">
-  <a href="https://auth-system-gie0.onrender.com/" target="_blank">View Live App</a>
+  <a href="https://auth-system-xi.vercel.app/" target="_blank">View Live App</a>
 </p>
 
 ## Project Description
