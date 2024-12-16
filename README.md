@@ -44,7 +44,7 @@ The **Auth System** application uses the following technologies and tools:
 
 ### Deployment
 
-- **Render**: Cloud platform for deploying and hosting the application.
+- **Vercel**: Cloud platform for deploying and hosting the application.
 
 ### Other Libraries and Packages
 
